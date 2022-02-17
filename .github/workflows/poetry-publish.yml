@@ -30,15 +30,11 @@ jobs:
       - name: Poetry configure
         run: poetry config pypi-token.pypi  ${{ secrets.PYPI_API_TOKEN }}
 
-      # Runs a set of commands using the runners shell
-      - name: Poetry build
-        run: poetry build
-
       - name: Poetry publish
-        run: poetry publish
+        run: poetry publish --build
 
       - name: Bump version
         if: ${{ failure() }}
         run: |
           poetry version patch
-          poetry publish
+          poetry publish --build
