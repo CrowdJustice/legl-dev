@@ -260,7 +260,10 @@ def format(
 
 
 @app.command(help="Open Cypress e2e tests")
-def cypress(verbose: bool = typer.Option(True, help="Run the command in verbose mode")):
+def cypress(
+        verbose: bool = typer.Option(True, help="Run the command in verbose mode"),
+        mutagen: bool = typer.Option(False, help="Run docker with Mutagen")
+    ):
 
     steps = Steps(
         steps=[
