@@ -3,7 +3,7 @@ from os import environ
 
 import typer
 
-from .command import Command, Steps
+from legl_dev.command import Command, Steps
 
 app = typer.Typer()
 
