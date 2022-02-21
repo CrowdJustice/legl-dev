@@ -23,7 +23,7 @@ class Command:
 
 
 class Steps:
-    def __init__(self, steps: list = [], concurrent: bool = False) -> None:
+    def __init__(self, steps: list = None, concurrent: bool = False) -> None:
         self.steps = steps
         self.concurrent = concurrent
 

@@ -18,49 +18,30 @@ def docker_command(mutagen):
 def start(
     mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     https: bool = typer.Option(False, help="Run server in HTTPS mode"),
-    worker: bool = typer.Option(False, help="Run server with worker"),
     webpack: bool = typer.Option(True, help="Run server with webpack transpiller"),
 ):
-
     steps = Steps(concurrent=True)
     if https:
         environ["HOST_SCHEME"] = "https"
         environ["DEV_LOCAL_INSTALLED_APPS"] = '["sslserver"]'
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py runsslserver 0.0.0.0:443",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py "
+                    "runsslserver 0.0.0.0:443 "
+                    "-e "
+                    "HOST_SCHEME=https "
+                    "DEV_LOCAL_INSTALLED_APPS='[\"sslserver\"]'"
+                )
             )
         )
     else:
-        environ.pop("HOST_SCHEME", None)
-        environ.pop("DEV_LOCAL_INSTALLED_APPS", None)
         steps.add(
             Command(
                 command=f"{docker_command(mutagen)} up backend",
             )
         )
-    if worker:
-        environ.pop("CELERY_TASK_ALWAYS_EAGER", "False")
-        environ["CELERY_TASK_ALWAYS_EAGER"] = "False"
-        steps.add(
-            [
-                Command(
-                    command="rabbitmq-server",
-                ),
-                Command(
-                    command="pm2 start ./legl_dev/pm2.config.js",
-                ),
-                Command(
-                    command="pm2 log",
-                ),
-                Command(
-                    command="rabbitmq-diagnostics log_tail_stream",
-                ),
-            ]
-        )
-    else:
-        environ.pop("CELERY_TASK_ALWAYS_EAGER", None)
-
     if webpack:
         steps.add(
             Command(
@@ -89,16 +70,28 @@ def build(
         [
             Command(command=f"{docker_command(mutagen)} up -d"),
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py migrate",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py migrate"
+                )
             ),
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py flush --noinput",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py flush --noinput"
+                )
             ),
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py run_factories",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py run_factories"
+                )
             ),
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py seed_emails",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py seed_emails"
+                )
             ),
             Command(command=f"{docker_command(mutagen)} stop"),
         ]
@@ -166,7 +159,12 @@ def pytest(
     steps = Steps(
         steps=[
             Command(
-                command=f"{docker_command(mutagen)} exec backend pytest --html=unit_test_results.html {extra_args} {path}",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend pytest "
+                    "--html=unit_test_results.html "
+                    f"{extra_args} {path}"
+                )
             ),
         ]
     )
@@ -194,14 +192,14 @@ def format(
 
     steps = Steps(
         steps=[
+            Command(command=(f"{docker_command(mutagen)} " "exec backend isort .")),
+            Command(command=(f"{docker_command(mutagen)} " "exec backend black .")),
             Command(
-                command=f"{docker_command(mutagen)} exec backend isort .",
-            ),
-            Command(
-                command=f"{docker_command(mutagen)} exec backend black .",
-            ),
-            Command(
-                command=f"{docker_command(mutagen)} exec frontend yarn run format:prettier",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec frontend "
+                    "yarn run format:prettier"
+                )
             ),
         ]
     )
@@ -214,9 +212,7 @@ def format(
                 Command(
                     command='git commit -m "formatting"',
                 ),
-                Command(
-                    log_file="git_push", desc="pushing changes", command="git push"
-                ),
+                Command(command="git push"),
             ]
         )
     steps.run()
@@ -249,25 +245,34 @@ def migrate(
     if merge:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py makemigrations --merge",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py makemigrations --merge"
+                )
             ),
         )
     if make:
         steps.add(
-            Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py makemigrations",
+            (
+                Command(
+                    command=(
+                        f"{docker_command(mutagen)} "
+                        "exec backend python manage.py makemigrations"
+                    )
+                )
             ),
         )
     if run:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py migrate",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py migrate"
+                )
             ),
         )
     steps.add(
-        Command(
-            command=f"{docker_command(mutagen)} exec backend black .",
-        ),
+        Command(command=(f"{docker_command(mutagen)} " "exec backend black .")),
     )
     steps.run()
 
@@ -281,17 +286,26 @@ def factories(
     steps = Steps(
         steps=[
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py flush --noinput",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py flush --noinput"
+                )
             ),
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py run_factories",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py run_factories"
+                )
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} exec backend python manage.py seed_emails",
+                command=(
+                    f"{docker_command(mutagen)} "
+                    "exec backend python manage.py seed_emails"
+                )
             ),
         )
     steps.run()
@@ -302,7 +316,11 @@ def gitclean():
     steps = Steps(
         steps=[
             Command(
-                command='git branch --merged | egrep -v "(^\\*|master|dev)" | xargs git branch -d',
+                command=(
+                    "git branch --merged | "
+                    'egrep -v "(^\\*|master|dev)" | '
+                    "xargs git branch -d"
+                ),
                 shell=True,
             ),
         ]
@@ -318,7 +336,7 @@ def jstest(
     steps = Steps(
         steps=[
             Command(
-                command=f"{docker_command(mutagen)} exec frontend yarn run test",
+                command=(f"{docker_command(mutagen)} " "exec frontend yarn run test")
             ),
             Command(
                 command="open js-test-results/index.html",
