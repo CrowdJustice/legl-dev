@@ -13,7 +13,8 @@ def start(
     https: bool = typer.Option(False, help="Run server in HTTPS mode"),
     webpack: bool = typer.Option(True, help="Run server with webpack transpiller"),
 ):
-    steps = Steps(concurrent=True)
+    steps = Steps()
+    steps.add(Command(command="docker compose stop"))
     if https:
         environ["HOST_SCHEME"] = "https"
         environ["DEV_LOCAL_INSTALLED_APPS"] = '["sslserver"]'
@@ -25,23 +26,24 @@ def start(
                     "runsslserver 0.0.0.0:443 "
                     "-e "
                     "HOST_SCHEME=https "
-                    "DEV_LOCAL_INSTALLED_APPS='[\"sslserver\"]'"
+                    "DEV_LOCAL_INSTALLED_APPS='[\"sslserver\"]' "
+                    "-d "
                 )
             )
         )
     else:
         steps.add(
             Command(
-                command=f"docker compose up backend",
+                command="docker compose up backend -d",
             )
         )
     if webpack:
         steps.add(
             Command(
-                command=f"docker compose up frontend",
+                command="docker compose up frontend -d",
             )
         )
-
+    steps.add(Command(command="docker compose logs -f"))
     steps.run()
 
 

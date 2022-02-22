@@ -19,13 +19,13 @@ class Command:
             self.command if self.shell else self.command.split(),
             universal_newlines=True,
             shell=self.shell,
+            check=True,
         )
 
 
 class Steps:
-    def __init__(self, steps: list = None, concurrent: bool = False) -> None:
+    def __init__(self, steps: list = None) -> None:
         self.steps = steps or []
-        self.concurrent = concurrent
 
     def add(self, steps: Union[list, Command]) -> None:
         try:
@@ -35,7 +35,4 @@ class Steps:
 
     def run(self) -> None:
         for step in self.steps:
-            if self.concurrent:
-                Thread(target=step.run).start()
-            else:
-                step.run()
+            step.run()
