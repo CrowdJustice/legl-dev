@@ -24,7 +24,7 @@ class Command:
 
 class Steps:
     def __init__(self, steps: list = None, concurrent: bool = False) -> None:
-        self.steps = steps
+        self.steps = steps or []
         self.concurrent = concurrent
 
     def add(self, steps: Union[list, Command]) -> None:
