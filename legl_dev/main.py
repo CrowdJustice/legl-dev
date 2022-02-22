@@ -8,15 +8,8 @@ from legl_dev.command import Command, Steps
 app = typer.Typer()
 
 
-def docker_command(mutagen):
-    if mutagen:
-        return "mutagen-compose"
-    return "docker compose"
-
-
 @app.command(help="Start the dev enviroment")
 def start(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     https: bool = typer.Option(False, help="Run server in HTTPS mode"),
     webpack: bool = typer.Option(True, help="Run server with webpack transpiller"),
 ):
@@ -27,7 +20,7 @@ def start(
         steps.add(
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
+                    f"docker compose "
                     "exec backend python manage.py "
                     "runsslserver 0.0.0.0:443 "
                     "-e "
@@ -39,13 +32,13 @@ def start(
     else:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} up backend",
+                command=f"docker compose up backend",
             )
         )
     if webpack:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} up frontend",
+                command=f"docker compose up frontend",
             )
         )
 
@@ -54,7 +47,6 @@ def start(
 
 @app.command(help="Rebuild the local enviroment")
 def build(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     cache: bool = typer.Option(True, help="Drop the database and create a fresh one"),
 ) -> None:
 
@@ -62,38 +54,30 @@ def build(
     steps = Steps(
         steps=[
             Command(
-                command=f"{docker_command(mutagen)} build {extra_args}",
+                command=f"docker compose build {extra_args}",
             ),
         ],
     )
     steps.add(
         [
-            Command(command=f"{docker_command(mutagen)} up -d"),
+            Command(command=f"docker compose up -d"),
+            Command(
+                command=(f"docker compose " "exec backend python manage.py migrate")
+            ),
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py migrate"
+                    f"docker compose " "exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py flush --noinput"
+                    f"docker compose " "exec backend python manage.py run_factories"
                 )
             ),
             Command(
-                command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py run_factories"
-                )
+                command=(f"docker compose " "exec backend python manage.py seed_emails")
             ),
-            Command(
-                command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py seed_emails"
-                )
-            ),
-            Command(command=f"{docker_command(mutagen)} stop"),
+            Command(command=f"docker compose stop"),
         ]
     )
     steps.run()
@@ -103,7 +87,6 @@ def build(
 
 @app.command(help="Run the local pytest unit tests")
 def pytest(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     full_diff: bool = typer.Option(
         False,
         help="Show full diff in errors",
@@ -160,7 +143,7 @@ def pytest(
         steps=[
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
+                    f"docker compose "
                     "exec backend pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} {path}"
@@ -178,7 +161,7 @@ def pytest(
     if snapshot_update:
         steps.add(
             Command(
-                command=f"{docker_command(mutagen)} exec backend black .",
+                command=f"docker compose exec backend black .",
             )
         )
     steps.run()
@@ -186,20 +169,15 @@ def pytest(
 
 @app.command(help="Format the code with isort, black and prettier")
 def format(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     push: bool = typer.Option(False, help="Also push the changes to the repo"),
 ):
 
     steps = Steps(
         steps=[
-            Command(command=(f"{docker_command(mutagen)} " "exec backend isort .")),
-            Command(command=(f"{docker_command(mutagen)} " "exec backend black .")),
+            Command(command=(f"docker compose " "exec backend isort .")),
+            Command(command=(f"docker compose " "exec backend black .")),
             Command(
-                command=(
-                    f"{docker_command(mutagen)} "
-                    "exec frontend "
-                    "yarn run format:prettier"
-                )
+                command=(f"docker compose " "exec frontend " "yarn run format:prettier")
             ),
         ]
     )
@@ -219,12 +197,11 @@ def format(
 
 
 @app.command(help="Open Cypress e2e tests")
-def cypress(mutagen: bool = typer.Option(False, help="Run docker with Mutagen")):
-
+def cypress():
     steps = Steps(
         steps=[
             Command(
-                command=f"{docker_command(mutagen)} exec frontend yarn run cypress open",
+                command=f"docker compose exec frontend yarn run cypress open",
             )
         ]
     )
@@ -233,7 +210,6 @@ def cypress(mutagen: bool = typer.Option(False, help="Run docker with Mutagen"))
 
 @app.command(help="Create and run migrations")
 def migrate(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     merge: bool = typer.Option(False, help="Run a migration merge first"),
     make: bool = typer.Option(False, help="Run makemigrations before migrating"),
     run: bool = typer.Option(
@@ -246,7 +222,7 @@ def migrate(
         steps.add(
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
+                    f"docker compose "
                     "exec backend python manage.py makemigrations --merge"
                 )
             ),
@@ -256,7 +232,7 @@ def migrate(
             (
                 Command(
                     command=(
-                        f"{docker_command(mutagen)} "
+                        f"docker compose "
                         "exec backend python manage.py makemigrations"
                     )
                 )
@@ -265,21 +241,17 @@ def migrate(
     if run:
         steps.add(
             Command(
-                command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py migrate"
-                )
+                command=(f"docker compose " "exec backend python manage.py migrate")
             ),
         )
     steps.add(
-        Command(command=(f"{docker_command(mutagen)} " "exec backend black .")),
+        Command(command=(f"docker compose " "exec backend black .")),
     )
     steps.run()
 
 
 @app.command(help="Clean out and create new factories")
 def factories(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
     emails: bool = typer.Option(True, help="Generate factory emails"),
 ):
 
@@ -287,14 +259,12 @@ def factories(
         steps=[
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py flush --noinput"
+                    f"docker compose " "exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
                 command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py run_factories"
+                    f"docker compose " "exec backend python manage.py run_factories"
                 )
             ),
         ],
@@ -302,10 +272,7 @@ def factories(
     if emails:
         steps.add(
             Command(
-                command=(
-                    f"{docker_command(mutagen)} "
-                    "exec backend python manage.py seed_emails"
-                )
+                command=(f"docker compose " "exec backend python manage.py seed_emails")
             ),
         )
     steps.run()
@@ -329,15 +296,11 @@ def gitclean():
 
 
 @app.command(help="Run JS unit tests")
-def jstest(
-    mutagen: bool = typer.Option(False, help="Run docker with Mutagen"),
-):
+def jstest():
 
     steps = Steps(
         steps=[
-            Command(
-                command=(f"{docker_command(mutagen)} " "exec frontend yarn run test")
-            ),
+            Command(command=(f"docker compose " "exec frontend yarn run test")),
             Command(
                 command="open js-test-results/index.html",
             ),
