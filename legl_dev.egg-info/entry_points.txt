@@ -1,3 +1,0 @@
-[console_scripts]
-legl-dev = legl_dev.main:app
-
