@@ -1,0 +1,11 @@
+README.md
+setup.py
+legl_dev/__init__.py
+legl_dev/command.py
+legl_dev/main.py
+legl_dev.egg-info/PKG-INFO
+legl_dev.egg-info/SOURCES.txt
+legl_dev.egg-info/dependency_links.txt
+legl_dev.egg-info/entry_points.txt
+legl_dev.egg-info/requires.txt
+legl_dev.egg-info/top_level.txt
