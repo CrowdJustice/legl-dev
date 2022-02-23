@@ -114,6 +114,12 @@ def build(
     steps.add(
         [
             Command(
+                log_file="start_docker",
+                desc="starting docker compose",
+                command=f"{docker_command(mutagen)} up -d",
+                verbose=verbose
+            ),
+            Command(
                 log_file="run_migrations",
                 desc="Running migrations",
                 command=f"{docker_command(mutagen)} exec backend python manage.py migrate",
@@ -137,6 +143,12 @@ def build(
                 command=f"{docker_command(mutagen)} exec backend python manage.py seed_emails",
                 verbose=verbose,
             ),
+            Command(
+                log_file="stop_docker",
+                desc="Stopping docker compose",
+                command=f"{docker_command(mutagen)} stop",
+                verbose=verbose
+            )
         ]
     )
     steps.run()
