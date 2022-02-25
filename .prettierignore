@@ -1,0 +1,140 @@
+node_modules
+templates/*
+js-test-results
+dist
+projects/*/static/*/dist
+static/css/*
+static/CACHE/*
+static/js/bootstrap-scrolling/*
+static/vendor/*
+static/icons/*
+staticfiles/*
+.pnp.js
+venv/*
+*.html
+*.scss
+.yarn
+*bundle.js
+projects/shared/pdf_viewer/static/pdfjs/*
+
+# Python bytecode:
+*.py[co]
+
+# Packaging files:
+*.egg*
+
+# Editor temp files:
+*.swp
+*~
+*.orig
+.DS_Store
+
+# Sphinx docs:
+build
+!projects/shared/pdf_viewer/static/pdfjs/build
+
+# SQLite3 database files:
+*.db
+
+# Celerybeat scheduler file:
+celerybeat-schedule
+venv/
+staticfiles/*
+media/*
+
+./static/
+
+*DS_Store
+# Eclipse project files
+/.settings/
+/.project
+/.pydevproject
+
+# Pycharm project files
+.idea
+
+# Local settings
+settings/dev_local.py
+
+# Coverage
+.coverage
+htmlcov/*
+coverage.xml
+
+# Node
+node_modules
+node_modules/*
+projects/*/*/node_modules/*
+
+# Webpack generated assets
+projects/*/*/static/*/dist
+templates/generated
+
+
+# Generated css
+static/css/*
+static/icons/*
+static/fonts/*
+
+# temporary folder
+temp/
+.cache/
+ghostdriver.log
+
+# Sass generated file
+*.map
+
+# VS Code settings
+.vscode/
+
+# Docker Compose local variables
+.env
+
+# Mypy cache
+.mypy_cache
+
+# Cypress videos and screenshots
+/e2e/cypress/test_reports
+/e2e/cypress/test_screenshots
+/e2e/cypress/test_videos
+/e2e/node_modules
+/e2e/package-lock.json
+e2e/*.log
+
+# Karma coverage
+js-test-results
+
+#pytest
+.pytest_cache
+unit_test_results.html
+erl_crash.dump
+
+#docker sync
+.docker-sync
+
+#build logs
+build_logs
+
+#yarn
+.yarn/*
+!.yarn/cache
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+logs
+
+*.dmg
+
+assets/*
+
+#storybook
+storybook-static
+
+legl_dev/dist/*
+legl_dev/setup.py
+
+package-lock.json
+
+local.log

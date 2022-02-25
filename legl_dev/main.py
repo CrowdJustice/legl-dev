@@ -35,21 +35,17 @@ def build(
     steps.add(
         [
             Command(command=f"docker compose up -d"),
-            Command(
-                command=(f"docker compose " "exec backend python manage.py migrate")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py migrate")),
             Command(
                 command=(
-                    f"docker compose " "exec backend python manage.py flush --noinput"
+                    f"docker compose exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
-                command=(
-                    f"docker compose " "exec backend python manage.py run_factories"
-                )
+                command=(f"docker compose exec backend python manage.py run_factories")
             ),
             Command(
-                command=(f"docker compose " "exec backend python manage.py seed_emails")
+                command=(f"docker compose exec backend python manage.py seed_emails")
             ),
             Command(command=f"docker compose stop"),
         ]
@@ -142,11 +138,9 @@ def format(
 
     steps = Steps(
         steps=[
-            Command(command=(f"docker compose " "exec backend isort .")),
-            Command(command=(f"docker compose " "exec backend black .")),
-            Command(
-                command=(f"docker compose " "exec frontend " "yarn run format:prettier")
-            ),
+            Command(command=(f"isort .")),
+            Command(command=(f"black .")),
+            Command(command=('npx prettier \"**/*.{js,css,scss}\" --write')),
         ]
     )
     if push:
@@ -156,7 +150,7 @@ def format(
                     command="git stage .",
                 ),
                 Command(
-                    command='git commit -m "formatting"',
+                    command="git commit -m formatting",
                 ),
                 Command(command="git push"),
             ]
@@ -208,9 +202,7 @@ def migrate(
         )
     if run:
         steps.add(
-            Command(
-                command=(f"docker compose " "exec backend python manage.py migrate")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py migrate")),
         )
     steps.run()
 
@@ -224,20 +216,18 @@ def factories(
         steps=[
             Command(
                 command=(
-                    f"docker compose " "exec backend python manage.py flush --noinput"
+                    f"docker compose exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
-                command=(
-                    f"docker compose " "exec backend python manage.py run_factories"
-                )
+                command=(f"docker compose exec backend python manage.py run_factories")
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=(f"docker compose " "exec backend python manage.py seed_emails")
+                command=(f"docker compose exec backend python manage.py seed_emails")
             ),
         )
     steps.run()
@@ -265,7 +255,7 @@ def jstest():
 
     steps = Steps(
         steps=[
-            Command(command=(f"docker compose " "exec frontend yarn run test")),
+            Command(command=(f"docker compose exec frontend yarn run test")),
             Command(
                 command="open js-test-results/index.html",
             ),
