@@ -9,41 +9,13 @@ app = typer.Typer()
 
 
 @app.command(help="Start the dev enviroment")
-def start(
-    https: bool = typer.Option(False, help="Run server in HTTPS mode"),
-    webpack: bool = typer.Option(True, help="Run server with webpack transpiller"),
-):
+def start():
     steps = Steps()
-    steps.add(Command(command="docker compose stop"))
-    if https:
-        environ["HOST_SCHEME"] = "https"
-        environ["DEV_LOCAL_INSTALLED_APPS"] = '["sslserver"]'
-        steps.add(
-            Command(
-                command=(
-                    f"docker compose "
-                    "exec backend python manage.py "
-                    "runsslserver 0.0.0.0:443 "
-                    "-e "
-                    "HOST_SCHEME=https "
-                    "DEV_LOCAL_INSTALLED_APPS='[\"sslserver\"]' "
-                    "-d "
-                )
-            )
+    steps.add(
+        Command(
+            command="docker compose up",
         )
-    else:
-        steps.add(
-            Command(
-                command="docker compose up backend -d",
-            )
-        )
-    if webpack:
-        steps.add(
-            Command(
-                command="docker compose up frontend -d",
-            )
-        )
-    steps.add(Command(command="docker compose logs -f"))
+    )
     steps.run()
 
 
@@ -160,12 +132,6 @@ def pytest(
             )
         )
 
-    if snapshot_update:
-        steps.add(
-            Command(
-                command=f"docker compose exec backend black .",
-            )
-        )
     steps.run()
 
 
@@ -246,9 +212,6 @@ def migrate(
                 command=(f"docker compose " "exec backend python manage.py migrate")
             ),
         )
-    steps.add(
-        Command(command=(f"docker compose " "exec backend black .")),
-    )
     steps.run()
 
 
