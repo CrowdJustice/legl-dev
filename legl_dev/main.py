@@ -129,7 +129,7 @@ def format(
         steps=[
             Command(command=(f"isort .")),
             Command(command=(f"black .")),
-            Command(command=('npx prettier \"**/*.{js,css,scss}\" --write')),
+            Command(command=('npx prettier "**/*.{js,css,scss}" --write')),
         ]
     )
     if push:
