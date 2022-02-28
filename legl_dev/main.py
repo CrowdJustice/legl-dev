@@ -73,10 +73,6 @@ def pytest(
         False,
         help="Toggle warnings in output",
     ),
-    gui: bool = typer.Option(
-        True,
-        help="Toggle the output gui",
-    ),
     snapshot_update: bool = typer.Option(
         False,
         help="update snapshots",
@@ -121,13 +117,6 @@ def pytest(
             ),
         ]
     )
-    if gui:
-        steps.add(
-            Command(
-                command=f"open ./unit_test_results.html",
-            )
-        )
-
     steps.run()
 
 
