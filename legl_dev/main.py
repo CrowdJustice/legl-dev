@@ -36,17 +36,9 @@ def build(
         [
             Command(command=f"docker compose up -d"),
             Command(command=(f"docker compose exec backend python manage.py migrate")),
-            Command(
-                command=(
-                    f"docker compose exec backend python manage.py flush --noinput"
-                )
-            ),
-            Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
-            ),
-            Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py flush --noinput")),
+            Command(command=(f"docker compose exec backend python manage.py run_factories")),
+            Command(command=(f"docker compose exec backend python manage.py seed_emails")),
             Command(command=f"docker compose stop"),
         ]
     )
@@ -72,10 +64,6 @@ def pytest(
     warnings: bool = typer.Option(
         False,
         help="Toggle warnings in output",
-    ),
-    gui: bool = typer.Option(
-        True,
-        help="Toggle the output gui",
     ),
     snapshot_update: bool = typer.Option(
         False,
@@ -121,13 +109,6 @@ def pytest(
             ),
         ]
     )
-    if gui:
-        steps.add(
-            Command(
-                command=f"open ./unit_test_results.html",
-            )
-        )
-
     steps.run()
 
 
@@ -140,7 +121,7 @@ def format(
         steps=[
             Command(command=(f"isort .")),
             Command(command=(f"black .")),
-            Command(command=('npx prettier \"**/*.{js,css,scss}\" --write')),
+            Command(command=('npx prettier "**/*.{js,css,scss}" --write')),
         ]
     )
     if push:
@@ -174,31 +155,19 @@ def cypress():
 def migrate(
     merge: bool = typer.Option(False, help="Run a migration merge first"),
     make: bool = typer.Option(False, help="Run makemigrations before migrating"),
-    run: bool = typer.Option(
-        True, help="use --no-run to prevent migrations from running"
-    ),
+    run: bool = typer.Option(True, help="use --no-run to prevent migrations from running"),
 ):
 
     steps = Steps()
     if merge:
         steps.add(
             Command(
-                command=(
-                    f"docker compose "
-                    "exec backend python manage.py makemigrations --merge"
-                )
+                command=(f"docker compose " "exec backend python manage.py makemigrations --merge")
             ),
         )
     if make:
         steps.add(
-            (
-                Command(
-                    command=(
-                        f"docker compose "
-                        "exec backend python manage.py makemigrations"
-                    )
-                )
-            ),
+            (Command(command=(f"docker compose " "exec backend python manage.py makemigrations"))),
         )
     if run:
         steps.add(
@@ -214,21 +183,13 @@ def factories(
 
     steps = Steps(
         steps=[
-            Command(
-                command=(
-                    f"docker compose exec backend python manage.py flush --noinput"
-                )
-            ),
-            Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py flush --noinput")),
+            Command(command=(f"docker compose exec backend python manage.py run_factories")),
         ],
     )
     if emails:
         steps.add(
-            Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py seed_emails")),
         )
     steps.run()
 
