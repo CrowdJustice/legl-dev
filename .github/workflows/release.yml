@@ -1,6 +1,9 @@
 name: release
 
-on: push
+on:
+  push:
+    branches:
+      - "main"
 
 jobs:
   release:
@@ -17,7 +20,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body: |
-            ### Install will
+            ### Install with
             ```
               pip install git+https://github.com/CrowdJustice/legl-dev.git@${{ env.VERSION }}
             ```
