@@ -5,7 +5,9 @@ import typer
 
 from legl_dev.command import Command, Steps
 
-app = typer.Typer()
+__version__ = "1.0.5"
+
+app = typer.Typer(invoke_without_command=True)
 
 
 @app.command(help="Start the dev enviroment")
@@ -224,6 +226,11 @@ def jstest():
     )
     steps.run()
 
+@app.callback()
+def main(version: bool = False):
+    if version:
+        typer.echo(f"v{__version__}")
+        raise typer.Exit()
 
 if __name__ == "__main__":
     app()
