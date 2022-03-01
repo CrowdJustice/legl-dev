@@ -17,3 +17,4 @@ jobs:
               with:
                   files: dist/*
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  tag_name: python3 setup.py --version
