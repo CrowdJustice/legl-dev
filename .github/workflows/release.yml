@@ -16,7 +16,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          description: |
+          body: |
             ### Install will
             ```
               pip install git+https://github.com/CrowdJustice/legl-dev.git@${{ env.VERSION }}
