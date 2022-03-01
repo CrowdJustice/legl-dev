@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from os import environ
-
+import os
 import typer
 
 from legl_dev.command import Command, Steps
@@ -9,6 +8,8 @@ __version__ = "1.0.5"
 
 app = typer.Typer(invoke_without_command=True)
 
+os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
+os.environ["DOCKER_BUILDKIT"] = "1"
 
 @app.command(help="Start the dev enviroment")
 def start():
@@ -45,8 +46,6 @@ def build(
         ]
     )
     steps.run()
-
-    print("Build complete 🚀")
 
 
 @app.command(help="Run the local pytest unit tests")
