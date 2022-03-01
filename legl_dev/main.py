@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-from os import environ
+import os
 
+import pkg_resources
 import typer
 
 from legl_dev.command import Command, Steps
 
-app = typer.Typer()
+app = typer.Typer(invoke_without_command=True)
+
+os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
+os.environ["DOCKER_BUILDKIT"] = "1"
 
 
 @app.command(help="Start the dev enviroment")
@@ -36,15 +40,21 @@ def build(
         [
             Command(command=f"docker compose up -d"),
             Command(command=(f"docker compose exec backend python manage.py migrate")),
-            Command(command=(f"docker compose exec backend python manage.py flush --noinput")),
-            Command(command=(f"docker compose exec backend python manage.py run_factories")),
-            Command(command=(f"docker compose exec backend python manage.py seed_emails")),
+            Command(
+                command=(
+                    f"docker compose exec backend python manage.py flush --noinput"
+                )
+            ),
+            Command(
+                command=(f"docker compose exec backend python manage.py run_factories")
+            ),
+            Command(
+                command=(f"docker compose exec backend python manage.py seed_emails")
+            ),
             Command(command=f"docker compose stop"),
         ]
     )
     steps.run()
-
-    print("Build complete 🚀")
 
 
 @app.command(help="Run the local pytest unit tests")
@@ -155,19 +165,31 @@ def cypress():
 def migrate(
     merge: bool = typer.Option(False, help="Run a migration merge first"),
     make: bool = typer.Option(False, help="Run makemigrations before migrating"),
-    run: bool = typer.Option(True, help="use --no-run to prevent migrations from running"),
+    run: bool = typer.Option(
+        True, help="use --no-run to prevent migrations from running"
+    ),
 ):
 
     steps = Steps()
     if merge:
         steps.add(
             Command(
-                command=(f"docker compose " "exec backend python manage.py makemigrations --merge")
+                command=(
+                    f"docker compose "
+                    "exec backend python manage.py makemigrations --merge"
+                )
             ),
         )
     if make:
         steps.add(
-            (Command(command=(f"docker compose " "exec backend python manage.py makemigrations"))),
+            (
+                Command(
+                    command=(
+                        f"docker compose "
+                        "exec backend python manage.py makemigrations"
+                    )
+                )
+            ),
         )
     if run:
         steps.add(
@@ -183,13 +205,21 @@ def factories(
 
     steps = Steps(
         steps=[
-            Command(command=(f"docker compose exec backend python manage.py flush --noinput")),
-            Command(command=(f"docker compose exec backend python manage.py run_factories")),
+            Command(
+                command=(
+                    f"docker compose exec backend python manage.py flush --noinput"
+                )
+            ),
+            Command(
+                command=(f"docker compose exec backend python manage.py run_factories")
+            ),
         ],
     )
     if emails:
         steps.add(
-            Command(command=(f"docker compose exec backend python manage.py seed_emails")),
+            Command(
+                command=(f"docker compose exec backend python manage.py seed_emails")
+            ),
         )
     steps.run()
 
@@ -223,6 +253,13 @@ def jstest():
         ]
     )
     steps.run()
+
+
+@app.callback()
+def main(version: bool = False):
+    if version:
+        typer.echo(f"v{pkg_resources.require('legl_dev')[0].version}")
+        raise typer.Exit()
 
 
 if __name__ == "__main__":
