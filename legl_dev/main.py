@@ -119,9 +119,9 @@ def format(
 
     steps = Steps(
         steps=[
-            Command(command=(f"isort .")),
-            Command(command=(f"black .")),
-            Command(command=('npx prettier "**/*.{js,css,scss}" --write')),
+            Command(command=(f"isort . --profile black --line-length 99")),
+            Command(command=(f"black . --line-length 99")),
+            Command(command=("yarn format:prettier")),
         ]
     )
     if push:
