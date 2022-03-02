@@ -114,7 +114,7 @@ def pytest(
                     f"docker compose "
                     "exec backend pytest "
                     "--html=unit_test_results.html "
-                    f"{extra_args} {path}"
+                    f"{extra_args} /code/{path}"
                 )
             ),
         ]
@@ -154,7 +154,7 @@ def cypress():
     steps = Steps(
         steps=[
             Command(
-                command=f"docker compose exec frontend yarn run cypress open",
+                command=f"yarn run cypress open",
             )
         ]
     )
@@ -246,7 +246,7 @@ def jstest():
 
     steps = Steps(
         steps=[
-            Command(command=(f"docker compose exec frontend yarn run test")),
+            Command(command=(f"yarn run test")),
             Command(
                 command="open js-test-results/index.html",
             ),
