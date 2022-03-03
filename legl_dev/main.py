@@ -39,15 +39,17 @@ def build(
     steps.add(
         [
             Command(command=f"docker compose up -d"),
-            Command(command=(f"docker compose run backend python manage.py migrate")),
+            Command(command=(f"docker compose run --rm backend python manage.py migrate")),
             Command(
-                command=(f"docker compose run backend python manage.py flush --noinput")
+                command=(
+                    f"docker compose run --rm backend python manage.py flush --noinput"
+                )
             ),
             Command(
-                command=(f"docker compose run backend python manage.py run_factories")
+                command=(f"docker compose run --rm backend python manage.py run_factories")
             ),
             Command(
-                command=(f"docker compose run backend python manage.py seed_emails")
+                command=(f"docker compose run --rm backend python manage.py seed_emails")
             ),
             Command(command=f"docker compose stop"),
         ]
@@ -190,7 +192,7 @@ def migrate(
         )
     if run:
         steps.add(
-            Command(command=(f"docker compose run backend python manage.py migrate")),
+            Command(command=(f"docker compose run --rm backend python manage.py migrate")),
         )
     steps.run()
 
@@ -203,17 +205,19 @@ def factories(
     steps = Steps(
         steps=[
             Command(
-                command=(f"docker compose run backend python manage.py flush --noinput")
+                command=(
+                    f"docker compose run --rm backend python manage.py flush --noinput"
+                )
             ),
             Command(
-                command=(f"docker compose run backend python manage.py run_factories")
+                command=(f"docker compose run --rm backend python manage.py run_factories")
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=(f"docker compose run backend python manage.py seed_emails")
+                command=(f"docker compose run --rm backend python manage.py seed_emails")
             ),
         )
     steps.run()
@@ -266,11 +270,11 @@ def install(
         steps.add(
             Command(
                 command=(
-                    f"docker compose run backend pip install {'--upgrade' if upgrade else ''} {pip}"
+                    f"docker compose run --rm backend pip install {'--upgrade' if upgrade else ''} {pip}"
                 )
             ),
             Command(
-                command=("docker compose run backend pip freeze > requirements.txt")
+                command=("docker compose run --rm backend pip freeze > requirements.txt")
             ),
         )
 
@@ -278,7 +282,7 @@ def install(
         steps.add(
             Command(
                 command=(
-                    f"docker compose run frontend yarn {'up' if upgrade else 'add'} {yarn}"
+                    f"docker compose run --rm frontend yarn {'up' if upgrade else 'add'} {yarn}"
                 )
             )
         )
