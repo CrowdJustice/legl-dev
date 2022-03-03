@@ -119,7 +119,7 @@ def pytest(
             Command(
                 command=(
                     f"docker compose "
-                    "run backend pytest "
+                    "run --rm backend pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} /code/{path}"
                 )
@@ -182,7 +182,7 @@ def migrate(
         steps.add(
             Command(
                 command=(
-                    f"docker compose run backend python manage.py makemigrations --merge"
+                    f"docker compose exec backend python manage.py makemigrations --merge"
                 )
             ),
         )
@@ -191,7 +191,7 @@ def migrate(
             (
                 Command(
                     command=(
-                        f"docker compose run backend python manage.py makemigrations"
+                        f"docker compose exec backend python manage.py makemigrations"
                     )
                 )
             ),
