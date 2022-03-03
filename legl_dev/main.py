@@ -13,7 +13,7 @@ os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
 os.environ["DOCKER_BUILDKIT"] = "1"
 
 
-@app.command(help="Start the dev enviroment")
+@app.command(help="Start the dev environment")
 def start():
     steps = Steps()
     steps.add(
@@ -24,7 +24,7 @@ def start():
     steps.run()
 
 
-@app.command(help="Rebuild the local enviroment")
+@app.command(help="Rebuild the local environment")
 def build(
     cache: bool = typer.Option(True, help="Drop the database and create a fresh one"),
 ) -> None:
@@ -40,23 +40,17 @@ def build(
     steps.add(
         [
             Command(command=f"docker compose up -d"),
-            Command(
-                command=(f"docker compose exec backend python manage.py migrate")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py migrate")),
             Command(
                 command=(
                     f"docker compose exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py run_factories"
-                )
+                command=(f"docker compose exec backend python manage.py run_factories")
             ),
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py seed_emails"
-                )
+                command=(f"docker compose exec backend python manage.py seed_emails")
             ),
             Command(command=f"docker compose stop"),
         ]
@@ -198,9 +192,7 @@ def migrate(
         )
     if run:
         steps.add(
-            Command(
-                command=(f"docker compose exec backend python manage.py migrate")
-            ),
+            Command(command=(f"docker compose exec backend python manage.py migrate")),
         )
     steps.run()
 
@@ -218,18 +210,14 @@ def factories(
                 )
             ),
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py run_factories"
-                )
+                command=(f"docker compose exec backend python manage.py run_factories")
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py seed_emails"
-                )
+                command=(f"docker compose exec backend python manage.py seed_emails")
             ),
         )
     steps.run()
@@ -290,7 +278,7 @@ def install(
                     command=(
                         f"docker exec backend pip freeze | grep {package} >> requirements.txt"
                     ),
-                    shell=True
+                    shell=True,
                 ),
             ]
         )
