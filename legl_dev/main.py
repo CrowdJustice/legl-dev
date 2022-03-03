@@ -41,9 +41,7 @@ def build(
             Command(command=f"docker compose up -d"),
             Command(command=(f"docker compose run backend python manage.py migrate")),
             Command(
-                command=(
-                    f"docker compose run backend python manage.py flush --noinput"
-                )
+                command=(f"docker compose run backend python manage.py flush --noinput")
             ),
             Command(
                 command=(f"docker compose run backend python manage.py run_factories")
@@ -185,8 +183,7 @@ def migrate(
             (
                 Command(
                     command=(
-                        f"docker compose "
-                        "run backend python manage.py makemigrations"
+                        f"docker compose run backend python manage.py makemigrations"
                     )
                 )
             ),
@@ -206,9 +203,7 @@ def factories(
     steps = Steps(
         steps=[
             Command(
-                command=(
-                    f"docker compose run backend python manage.py flush --noinput"
-                )
+                command=(f"docker compose run backend python manage.py flush --noinput")
             ),
             Command(
                 command=(f"docker compose run backend python manage.py run_factories")
@@ -252,6 +247,61 @@ def jstest():
             ),
         ]
     )
+    steps.run()
+
+
+@app.command(help="")
+def install(
+    pip: str = typer.Argument(default=False, help="Install a package using pip"),
+    yarn: str = typer.Argument(default=False, help="Install a package using yarn"),
+    self: bool = typer.Option(
+        default=False,
+        help="Reinstall legl-dev, can be used with --upgrade to on update current install",
+    ),
+    version: str = typer.Argument(default="", help="specify version of package to install"),
+    upgrade: bool = typer.Option(default=False, help="upgrade existing package instead of installing"),
+):
+    steps = Steps()
+    if pip:
+        steps.add(
+            Command(
+                command=(
+                    f"docker compose run backend pip install {'--upgrade' if upgrade else ''} {pip}"
+                )
+            ),
+            Command(
+                command=("docker compose run backend pip freeze > requirements.txt")
+            ),
+        )
+
+    if yarn:
+        steps.add(
+            Command(
+                command=(
+                    f"docker compose run frontend yarn {'up' if upgrade else 'add'} {yarn}"
+                )
+            )
+        )
+
+    legl_dev_version = ""
+    if version:
+        legl_dev_version = f"@{version}"
+
+    if self:
+        if upgrade:
+            steps.add(Command(command="pip install --upgrade legl-dev"))
+        else:
+            steps.add(
+                [
+                    Command(command=("pip uninstall legl-dev")),
+                    Command(
+                        command=(
+                            f"pip install git+https://github.com/CrowdJustice/legl-dev.git{legl_dev_version}"
+                        )
+                    ),
+                ]
+            )
+
     steps.run()
 
 
