@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from typing import Optional
 
 import pkg_resources
 import typer
@@ -39,17 +40,23 @@ def build(
     steps.add(
         [
             Command(command=f"docker compose up -d"),
-            Command(command=(f"docker compose run --rm backend python manage.py migrate")),
+            Command(
+                command=(f"docker compose run --rm backend python manage.py migrate")
+            ),
             Command(
                 command=(
                     f"docker compose run --rm backend python manage.py flush --noinput"
                 )
             ),
             Command(
-                command=(f"docker compose run --rm backend python manage.py run_factories")
+                command=(
+                    f"docker compose run --rm backend python manage.py run_factories"
+                )
             ),
             Command(
-                command=(f"docker compose run --rm backend python manage.py seed_emails")
+                command=(
+                    f"docker compose run --rm backend python manage.py seed_emails"
+                )
             ),
             Command(command=f"docker compose stop"),
         ]
@@ -175,8 +182,7 @@ def migrate(
         steps.add(
             Command(
                 command=(
-                    f"docker compose "
-                    "run backend python manage.py makemigrations --merge"
+                    f"docker compose run backend python manage.py makemigrations --merge"
                 )
             ),
         )
@@ -192,7 +198,9 @@ def migrate(
         )
     if run:
         steps.add(
-            Command(command=(f"docker compose run --rm backend python manage.py migrate")),
+            Command(
+                command=(f"docker compose run --rm backend python manage.py migrate")
+            ),
         )
     steps.run()
 
@@ -210,14 +218,18 @@ def factories(
                 )
             ),
             Command(
-                command=(f"docker compose run --rm backend python manage.py run_factories")
+                command=(
+                    f"docker compose run --rm backend python manage.py run_factories"
+                )
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=(f"docker compose run --rm backend python manage.py seed_emails")
+                command=(
+                    f"docker compose run --rm backend python manage.py seed_emails"
+                )
             ),
         )
     steps.run()
@@ -243,64 +255,65 @@ def gitclean():
 @app.command(help="Run JS unit tests")
 def jstest():
 
-    steps = Steps(
-        steps=[
-            Command(command=(f"yarn run test")),
-            Command(
-                command="open js-test-results/index.html",
-            ),
-        ]
-    )
+    steps = Steps(steps=[Command(command=(f"yarn run test"))])
     steps.run()
 
 
-@app.command(help="")
+@app.command(help="Install packages to the dev environment")
 def install(
-    pip: str = typer.Argument(default=False, help="Install a package using pip"),
-    yarn: str = typer.Argument(default=False, help="Install a package using yarn"),
+    package: Optional[str] = typer.Argument(
+        default="", help="Name of the package you would like to install"
+    ),
+    pip: bool = typer.Option(default=False, help="Install package using pip"),
+    yarn: bool = typer.Option(default=False, help="Install package using yarn"),
     self: bool = typer.Option(
         default=False,
         help="Reinstall legl-dev, can be used with --upgrade to on update current install",
     ),
-    version: str = typer.Argument(default="", help="specify version of package to install"),
-    upgrade: bool = typer.Option(default=False, help="upgrade existing package instead of installing"),
+    version: str = typer.Option(
+        default="main", help="specify version of legl-dev to install"
+    ),
+    upgrade: bool = typer.Option(
+        default=False, help="upgrade existing package instead of installing"
+    ),
 ):
     steps = Steps()
     if pip:
         steps.add(
-            Command(
-                command=(
-                    f"docker compose run --rm backend pip install {'--upgrade' if upgrade else ''} {pip}"
-                )
-            ),
-            Command(
-                command=("docker compose run --rm backend pip freeze > requirements.txt")
-            ),
+            [
+                Command(
+                    command=(
+                        f"docker exec backend pip install {'--upgrade' if upgrade else ''} {package}"
+                    )
+                ),
+                Command(
+                    command=(
+                        f"docker exec backend pip freeze | grep {package} >> requirements.txt"
+                    ),
+                    shell=True
+                ),
+            ]
         )
 
     if yarn:
         steps.add(
             Command(
                 command=(
-                    f"docker compose run --rm frontend yarn {'up' if upgrade else 'add'} {yarn}"
+                    f"docker exec frontend yarn {'up' if upgrade else 'add'} {package}"
                 )
             )
         )
 
-    legl_dev_version = ""
-    if version:
-        legl_dev_version = f"@{version}"
-
     if self:
         if upgrade:
-            steps.add(Command(command="pip install --upgrade legl-dev"))
+            steps.add(Command(command=f"pip install --upgrade legl-dev"))
         else:
             steps.add(
                 [
-                    Command(command=("pip uninstall legl-dev")),
+                    Command(command=("pip uninstall legl-dev -y")),
                     Command(
                         command=(
-                            f"pip install git+https://github.com/CrowdJustice/legl-dev.git{legl_dev_version}"
+                            f"pip install git+https://github.com/CrowdJustice/legl-dev.git@{version}"
                         )
                     ),
                 ]
