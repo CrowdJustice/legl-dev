@@ -41,21 +41,21 @@ def build(
         [
             Command(command=f"docker compose up -d"),
             Command(
-                command=(f"docker compose run --rm backend python manage.py migrate")
+                command=(f"docker compose exec backend python manage.py migrate")
             ),
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py flush --noinput"
+                    f"docker compose exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py run_factories"
+                    f"docker compose exec backend python manage.py run_factories"
                 )
             ),
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py seed_emails"
+                    f"docker compose exec backend python manage.py seed_emails"
                 )
             ),
             Command(command=f"docker compose stop"),
@@ -199,7 +199,7 @@ def migrate(
     if run:
         steps.add(
             Command(
-                command=(f"docker compose run --rm backend python manage.py migrate")
+                command=(f"docker compose exec backend python manage.py migrate")
             ),
         )
     steps.run()
@@ -214,12 +214,12 @@ def factories(
         steps=[
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py flush --noinput"
+                    f"docker compose exec backend python manage.py flush --noinput"
                 )
             ),
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py run_factories"
+                    f"docker compose exec backend python manage.py run_factories"
                 )
             ),
         ],
@@ -228,7 +228,7 @@ def factories(
         steps.add(
             Command(
                 command=(
-                    f"docker compose run --rm backend python manage.py seed_emails"
+                    f"docker compose exec backend python manage.py seed_emails"
                 )
             ),
         )
