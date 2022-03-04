@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from typing import Optional
 
 import pkg_resources
 import typer
@@ -12,7 +13,7 @@ os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
 os.environ["DOCKER_BUILDKIT"] = "1"
 
 
-@app.command(help="Start the dev enviroment")
+@app.command(help="Start the dev environment")
 def start():
     steps = Steps()
     steps.add(
@@ -23,7 +24,7 @@ def start():
     steps.run()
 
 
-@app.command(help="Rebuild the local enviroment")
+@app.command(help="Rebuild the local environment")
 def build(
     cache: bool = typer.Option(True, help="Drop the database and create a fresh one"),
 ) -> None:
@@ -112,7 +113,7 @@ def pytest(
             Command(
                 command=(
                     f"docker compose "
-                    "exec backend pytest "
+                    "run --rm backend pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} /code/{path}"
                 )
@@ -175,8 +176,7 @@ def migrate(
         steps.add(
             Command(
                 command=(
-                    f"docker compose "
-                    "exec backend python manage.py makemigrations --merge"
+                    f"docker compose exec backend python manage.py makemigrations --merge"
                 )
             ),
         )
@@ -185,8 +185,7 @@ def migrate(
             (
                 Command(
                     command=(
-                        f"docker compose "
-                        "exec backend python manage.py makemigrations"
+                        f"docker compose exec backend python manage.py makemigrations"
                     )
                 )
             ),
@@ -244,14 +243,70 @@ def gitclean():
 @app.command(help="Run JS unit tests")
 def jstest():
 
-    steps = Steps(
-        steps=[
-            Command(command=(f"yarn run test")),
+    steps = Steps(steps=[Command(command=(f"yarn run test"))])
+    steps.run()
+
+
+@app.command(help="Install packages to the dev environment")
+def install(
+    package: Optional[str] = typer.Argument(
+        default="", help="Name of the package you would like to install"
+    ),
+    pip: bool = typer.Option(default=False, help="Install package using pip"),
+    yarn: bool = typer.Option(default=False, help="Install package using yarn"),
+    self: bool = typer.Option(
+        default=False,
+        help="Reinstall legl-dev, can be used with --upgrade to on update current install",
+    ),
+    version: str = typer.Option(
+        default="main", help="specify version of legl-dev to install"
+    ),
+    upgrade: bool = typer.Option(
+        default=False, help="upgrade existing package instead of installing"
+    ),
+):
+    steps = Steps()
+    if pip:
+        steps.add(
+            [
+                Command(
+                    command=(
+                        f"docker exec backend pip install {'--upgrade' if upgrade else ''} {package}"
+                    )
+                ),
+                Command(
+                    command=(
+                        f"docker exec backend pip freeze | grep {package} >> requirements.txt"
+                    ),
+                    shell=True,
+                ),
+            ]
+        )
+
+    if yarn:
+        steps.add(
             Command(
-                command="open js-test-results/index.html",
-            ),
-        ]
-    )
+                command=(
+                    f"docker exec frontend yarn {'up' if upgrade else 'add'} {package}"
+                )
+            )
+        )
+
+    if self:
+        if upgrade:
+            steps.add(Command(command=f"pip install --upgrade legl-dev"))
+        else:
+            steps.add(
+                [
+                    Command(command=("pip uninstall legl-dev -y")),
+                    Command(
+                        command=(
+                            f"pip install git+https://github.com/CrowdJustice/legl-dev.git@{version}"
+                        )
+                    ),
+                ]
+            )
+
     steps.run()
 
 
