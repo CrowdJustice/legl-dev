@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-
-from subprocess import run
-from threading import Thread
+import typer
+from subprocess import run, CalledProcessError
 from typing import Union
 
 
@@ -15,12 +14,16 @@ class Command:
         self.shell = shell
 
     def run(self) -> None:
-        run(
-            self.command if self.shell else self.command.split(),
-            universal_newlines=True,
-            shell=self.shell,
-            check=True,
-        )
+        try:
+            run(
+                self.command if self.shell else self.command.split(),
+                universal_newlines=True,
+                shell=self.shell,
+                check=True,
+            )
+            typer.secho(f"✅  Command successful!", fg=typer.colors.GREEN)
+        except CalledProcessError:
+            typer.secho(f"⚠️  Command exited without a none 0 exit!", fg=typer.colors.YELLOW)
 
 
 class Steps:
