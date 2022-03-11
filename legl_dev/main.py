@@ -309,6 +309,13 @@ def install(
 
     steps.run()
 
+@app.command(help="Remote into a container")
+def shell(environment: Optional[str] = typer.Argument(default="backend", help="Container to remote into")):
+    steps = Steps()
+    steps.add(
+        Command(command=f"docker compose exec {environment} bash")
+    )
+    steps.run()
 
 @app.callback()
 def main(version: bool = False):
