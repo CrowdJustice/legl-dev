@@ -160,13 +160,12 @@ def test_install_self_upgrade(run):
     ]
     run.assert_has_calls(calls)
 
-
 @mock.patch("legl_dev.command.run")
-def test_remote_no_commands(run):
-    main.remote()
+def test_remote_frontend_commands(run):
+    main.shell("frontend")
     calls = [
         mock.call(
-            ["docker", "compose", "exe", "backend", "bash"],
+            ["docker", "compose", "exec", "frontend", "bash"],
             universal_newlines=True,
             shell=False,
             check=True,
@@ -176,23 +175,10 @@ def test_remote_no_commands(run):
 
 @mock.patch("legl_dev.command.run")
 def test_remote_frontend_commands(run):
-    main.remote("frontend")
+    main.shell("frontend")
     calls = [
         mock.call(
-            ["docker", "compose", "exe", "frontend", "bash"],
-            universal_newlines=True,
-            shell=False,
-            check=True,
-        ),
-    ]
-    run.assert_has_calls(calls)
-
-@mock.patch("legl_dev.command.run")
-def test_remote_frontend_commands(run):
-    main.remote("frontend")
-    calls = [
-        mock.call(
-            ["docker", "compose", "exe", "frontend", "bash"],
+            ["docker", "compose", "exec", "frontend", "bash"],
             universal_newlines=True,
             shell=False,
             check=True,
