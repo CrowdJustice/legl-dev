@@ -205,11 +205,6 @@ def factories(
     steps = Steps(
         steps=[
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py flush --noinput"
-                )
-            ),
-            Command(
                 command=(f"docker compose exec backend python manage.py run_factories")
             ),
         ],
