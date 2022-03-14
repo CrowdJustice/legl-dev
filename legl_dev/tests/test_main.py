@@ -159,3 +159,29 @@ def test_install_self_upgrade(run):
         ),
     ]
     run.assert_has_calls(calls)
+
+@mock.patch("legl_dev.command.run")
+def test_remote_frontend_commands(run):
+    main.shell("frontend")
+    calls = [
+        mock.call(
+            ["docker", "compose", "exec", "frontend", "bash"],
+            universal_newlines=True,
+            shell=False,
+            check=True,
+        ),
+    ]
+    run.assert_has_calls(calls)
+
+@mock.patch("legl_dev.command.run")
+def test_remote_frontend_commands(run):
+    main.shell("frontend")
+    calls = [
+        mock.call(
+            ["docker", "compose", "exec", "frontend", "bash"],
+            universal_newlines=True,
+            shell=False,
+            check=True,
+        ),
+    ]
+    run.assert_has_calls(calls)
