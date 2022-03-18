@@ -308,7 +308,7 @@ def install(
 def shell(environment: Optional[str] = typer.Argument(default="backend", help="Container to remote into")):
     steps = Steps()
     steps.add(
-        Command(command=f"docker compose exec {environment} bash")
+        Command(command=f"docker compose exec {environment} zsh")
     )
     steps.run()
 
