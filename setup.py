@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-version = "1.2.1"
+version = "1.2.2"
 
 packages = ["legl_dev"]
 
 package_data = {"": ["*"]}
 
-install_requires = ["black==19.10b0", "isort==5.9.3", "typer>=0.4.0"]
+install_requires = ["black", "isort==5.9.3", "typer>=0.4.0"]
 
 entry_points = {"console_scripts": ["legl-dev = legl_dev.main:app"]}
 
