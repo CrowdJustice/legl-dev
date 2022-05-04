@@ -22,8 +22,8 @@ class Command:
                 check=True,
             )
             typer.secho(f"✅  Command successful!", fg=typer.colors.GREEN)
-        except CalledProcessError:
-            typer.secho(f"⚠️  Command exited without a none 0 exit!", fg=typer.colors.YELLOW)
+        except CalledProcessError as e:
+            typer.secho(f"⚠️  Command exited with code {e.returncode}!", fg=typer.colors.YELLOW)
 
 
 class Steps:
