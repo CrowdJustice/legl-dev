@@ -130,8 +130,8 @@ def format(
 
     steps = Steps(
         steps=[
-            Command(command=(f"isort . --profile black --line-length 99")),
-            Command(command=(f"black . --line-length 99")),
+            Command(command=(f"isort . --profile black")),
+            Command(command=(f"black .")),
             Command(command=("yarn format:prettier")),
         ]
     )
