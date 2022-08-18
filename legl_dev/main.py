@@ -7,7 +7,9 @@ import typer
 from legl_dev.command import Command, Steps
 
 app = typer.Typer(invoke_without_command=True)
-
+docker_cmd = "docker compose"
+exec_cmd = f"{docker_cmd} exec server"
+django_cmd = f"{exec_cmd} python manage.py"
 os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
 os.environ["DOCKER_BUILDKIT"] = "1"
 
@@ -32,24 +34,20 @@ def build(
     steps = Steps(
         steps=[
             Command(
-                command=f"docker compose build {extra_args}",
+                command=f"{docker_cmd} build {extra_args}",
             ),
         ],
     )
     steps.add(
         [
-            Command(command=f"docker compose up -d"),
-            Command(command=(f"docker compose exec server python manage.py migrate")),
-            Command(
-                command=(f"docker compose exec server python manage.py flush --noinput")
-            ),
-            Command(
-                command=(f"docker compose exec server python manage.py run_factories")
-            ),
-            Command(
-                command=(f"docker compose exec server python manage.py seed_emails")
-            ),
-            Command(command=f"docker compose stop"),
+            Command(command=f"{docker_cmd} up -d"),
+            Command(command=f"{django_cmd} migrate"),
+            Command(command=f"{docker_cmd} stop database"),
+            Command(command=f"{docker_cmd} rm database"),
+            Command(command=f"{docker_cmd} up database -d"),
+            Command(command=f"{django_cmd} run_factories"),
+            Command(command=f"{django_cmd} seed_emails"),
+            Command(command=f"{docker_cmd} stop"),
         ]
     )
     steps.run()
@@ -109,7 +107,7 @@ def pytest(
         steps=[
             Command(
                 command=(
-                    f"docker compose "
+                    f"{docker_cmd} "
                     "run --rm backend pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} /code/{path}"
@@ -127,9 +125,9 @@ def format(
 
     steps = Steps(
         steps=[
-            Command(command=(f"isort . --profile black")),
-            Command(command=(f"black .")),
-            Command(command=("yarn format:prettier")),
+            Command(command=f"isort . --profile black"),
+            Command(command=f"black ."),
+            Command(command="yarn format:prettier"),
         ]
     )
     if push:
@@ -171,25 +169,15 @@ def migrate(
     steps = Steps()
     if merge:
         steps.add(
-            Command(
-                command=(
-                    f"docker compose exec server python manage.py makemigrations --merge"
-                )
-            ),
+            Command(command=f"{django_cmd} makemigrations --merge"),
         )
     if make:
         steps.add(
-            (
-                Command(
-                    command=(
-                        f"docker compose exec server python manage.py makemigrations"
-                    )
-                )
-            ),
+            (Command(command=f"{django_cmd} makemigrations")),
         )
     if run:
         steps.add(
-            Command(command=(f"docker compose exec server python manage.py migrate")),
+            Command(command=f"{django_cmd} migrate"),
         )
     steps.run()
 
@@ -201,16 +189,12 @@ def factories(
 
     steps = Steps(
         steps=[
-            Command(
-                command=(f"docker compose exec server python manage.py run_factories")
-            ),
+            Command(command=f"{django_cmd} run_factories"),
         ],
     )
     if emails:
         steps.add(
-            Command(
-                command=(f"docker compose exec server python manage.py seed_emails")
-            ),
+            Command(command=f"{django_cmd} seed_emails"),
         )
     steps.run()
 
@@ -263,12 +247,12 @@ def install(
             [
                 Command(
                     command=(
-                        f"docker exec server pip install {'--upgrade' if upgrade else ''} {package}"
+                        f"{exec_cmd}pip install {'--upgrade' if upgrade else ''} {package}"
                     )
                 ),
                 Command(
                     command=(
-                        f"docker exec server pip freeze | grep {package} >> requirements.txt"
+                        f"{exec_cmd} pip freeze | grep {package} >> requirements.txt"
                     ),
                     shell=True,
                 ),
@@ -277,11 +261,7 @@ def install(
 
     if yarn:
         steps.add(
-            Command(
-                command=(
-                    f"docker exec server yarn {'up' if upgrade else 'add'} {package}"
-                )
-            )
+            Command(command=(f"{exec_cmd} yarn {'up' if upgrade else 'add'} {package}"))
         )
 
     if self:
@@ -305,7 +285,7 @@ def install(
 @app.command(help="Remote into a container")
 def shell():
     steps = Steps()
-    steps.add(Command(command=f"docker compose exec server bash"))
+    steps.add(Command(command=f"{exec_cmd} bash"))
     steps.run()
 
 
