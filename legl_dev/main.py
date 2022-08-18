@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import json
 import os
 from typing import Optional
 
 import pkg_resources
+import requests
 import typer
 from legl_dev.command import Command, Steps
 
@@ -19,10 +21,21 @@ def start():
     steps = Steps()
     steps.add(
         Command(
-            command="docker compose up",
+            command="docker compose up -d",
         )
     )
     steps.run()
+
+
+@app.command(help="Start the dev environment")
+def logs():
+    steps = Steps()
+    steps.add(
+        Command(
+            command="docker compose logs -f",
+        )
+    )
+    steps.run_verbose()
 
 
 @app.command(help="Rebuild the local environment")
@@ -282,7 +295,6 @@ def install(
 
     steps.run()
 
-
 @app.command(help="Remote into a container")
 def shell():
     steps = Steps()
@@ -292,8 +304,26 @@ def shell():
 
 @app.callback()
 def main(version: bool = False):
+    response = requests.get(
+        url="https://api.github.com/repos/crowdjustice/legl-dev/releases",
+        headers={"Accept": "application/vnd.github.v3+json"},
+    )
+    releases = response.json()
+    latest_vesrion = pkg_resources.parse_version(releases[0]["tag_name"])
+    current_version = pkg_resources.parse_version(
+        pkg_resources.require("legl_dev")[0].version
+    )
+
+    if latest_vesrion > current_version:
+        update = typer.confirm(
+            f"A newer version ({latest_vesrion}) of legl-dev is availible, would you like to update?"
+        )
+        if update:
+            command = Command(command=f"pip install --upgrade legl-dev")
+            command.run()
+
     if version:
-        typer.echo(f"v{pkg_resources.require('legl_dev')[0].version}")
+        typer.echo(f"v{current_version}")
         raise typer.Exit()
 
 

@@ -170,6 +170,7 @@ def test_install_self_upgrade(run):
     run.assert_has_calls(calls)
 
 
+
 @mock.patch("legl_dev.command.run")
 def test_remote_server_commands(run):
     main.shell()
