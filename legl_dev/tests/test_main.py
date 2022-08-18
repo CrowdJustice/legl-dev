@@ -8,7 +8,7 @@ def test_standard_start_not_verbose(run):
     main.start(verbose=False)
     calls = [
         mock.call(
-            ["docker", "compose", "up"],
+            ["docker", "compose", "up", "-d"],
             universal_newlines=True,
             shell=False,
             check=True,
@@ -22,7 +22,7 @@ def test_standard_start(run):
     main.start()
     calls = [
         mock.call(
-            ["docker", "compose", "up", "-d"],
+            ["docker", "compose", "up"],
             universal_newlines=True,
             shell=False,
             check=True,

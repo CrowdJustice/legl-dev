@@ -21,7 +21,7 @@ def start(verbose: bool = typer.Option(True, help="Run in verbose mode")):
     steps = Steps()
     steps.add(
         Command(
-            command=f"{docker_cmd} up {'-d' if verbose else ''}",
+            command=f"{docker_cmd} up {'' if verbose else '-d'}",
         )
     )
     steps.run()
