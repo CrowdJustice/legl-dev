@@ -35,7 +35,7 @@ def test_install_pip(run):
             check=True,
         ),
         mock.call(
-            "docker exec server pip freeze | grep example >> requirements.txt",
+            "docker compose exec server pip freeze | grep example >> requirements.txt",
             universal_newlines=True,
             shell=True,
             check=True,
@@ -71,7 +71,7 @@ def test_install_pip_upgrade(run):
             check=True,
         ),
         mock.call(
-            "docker exec server pip freeze | grep example >> requirements.txt",
+            "docker compose exec server pip freeze | grep example >> requirements.txt",
             universal_newlines=True,
             shell=True,
             check=True,
