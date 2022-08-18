@@ -17,11 +17,11 @@ os.environ["DOCKER_BUILDKIT"] = "1"
 
 
 @app.command(help="Start the dev environment")
-def start():
+def start(verbose: bool = typer.Option(True, help="Run in verbose mode")):
     steps = Steps()
     steps.add(
         Command(
-            command="docker compose up -d",
+            command=f"{docker_cmd} up {'-d' if verbose else ''}",
         )
     )
     steps.run()
@@ -32,10 +32,10 @@ def logs():
     steps = Steps()
     steps.add(
         Command(
-            command="docker compose logs -f",
+            command=f"{docker_cmd} logs -f",
         )
     )
-    steps.run_verbose()
+    steps.run()
 
 
 @app.command(help="Rebuild the local environment")
@@ -43,7 +43,7 @@ def build(
     cache: bool = typer.Option(True, help="Drop the database and create a fresh one"),
 ) -> None:
 
-    extra_args = f"{'' if cache else '--no-cache'} "
+    extra_args = f"{'' if cache else '--no-cache'}"
     steps = Steps(
         steps=[
             Command(
@@ -294,6 +294,7 @@ def install(
             )
 
     steps.run()
+
 
 @app.command(help="Remote into a container")
 def shell():

@@ -3,7 +3,7 @@ from unittest import mock
 from legl_dev.command import Command, Steps
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_command_run(run):
     command = Command(command="echo test")
     command.run()
@@ -12,7 +12,7 @@ def test_command_run(run):
     )
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_command_run_with_shell(run):
     command = Command(command="echo test", shell=True)
     command.run()
@@ -56,7 +56,7 @@ def test_steps_dont_overflow_instance():
     assert steps_two.steps == [test_command_two]
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_standard_start(run):
     test_command_one = Command(command="echo test one")
     test_command_two = Command(command="echo test two")

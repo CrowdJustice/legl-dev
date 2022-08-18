@@ -3,9 +3,9 @@ from unittest import mock
 from legl_dev import main
 
 
-@mock.patch("legl_dev.command.run")
-def test_standard_start(run):
-    main.start()
+@mock.patch("legl_dev.command.subprocess.run")
+def test_standard_start_not_verbose(run):
+    main.start(verbose=False)
     calls = [
         mock.call(
             ["docker", "compose", "up"],
@@ -17,7 +17,21 @@ def test_standard_start(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
+def test_standard_start(run):
+    main.start()
+    calls = [
+        mock.call(
+            ["docker", "compose", "up", "-d"],
+            universal_newlines=True,
+            shell=False,
+            check=True,
+        ),
+    ]
+    run.assert_has_calls(calls)
+
+
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_pip(run):
     main.install(
         package="example",
@@ -44,7 +58,7 @@ def test_install_pip(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_pip_upgrade(run):
     main.install(
         package="example",
@@ -80,7 +94,7 @@ def test_install_pip_upgrade(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_yarn(run):
     main.install(
         package="example",
@@ -101,7 +115,7 @@ def test_install_yarn(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_yarn_upgrade(run):
     main.install(
         package="example",
@@ -122,7 +136,7 @@ def test_install_yarn_upgrade(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_self(run):
     main.install(
         package="example",
@@ -149,7 +163,7 @@ def test_install_self(run):
     run.assert_has_calls(calls)
 
 
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_install_self_upgrade(run):
     main.install(
         package="example",
@@ -170,8 +184,7 @@ def test_install_self_upgrade(run):
     run.assert_has_calls(calls)
 
 
-
-@mock.patch("legl_dev.command.run")
+@mock.patch("legl_dev.command.subprocess.run")
 def test_remote_server_commands(run):
     main.shell()
     calls = [
