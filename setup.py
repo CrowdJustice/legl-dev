@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-version = "1.2.3"
+version = "1.2.4"
 
 packages = ["legl_dev"]
 

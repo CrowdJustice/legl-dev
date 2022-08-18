@@ -4,7 +4,6 @@ from typing import Optional
 
 import pkg_resources
 import typer
-
 from legl_dev.command import Command, Steps
 
 app = typer.Typer(invoke_without_command=True)
@@ -40,17 +39,15 @@ def build(
     steps.add(
         [
             Command(command=f"docker compose up -d"),
-            Command(command=(f"docker compose exec backend python manage.py migrate")),
+            Command(command=(f"docker compose exec server python manage.py migrate")),
             Command(
-                command=(
-                    f"docker compose exec backend python manage.py flush --noinput"
-                )
+                command=(f"docker compose exec server python manage.py flush --noinput")
             ),
             Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
+                command=(f"docker compose exec server python manage.py run_factories")
             ),
             Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
+                command=(f"docker compose exec server python manage.py seed_emails")
             ),
             Command(command=f"docker compose stop"),
         ]
@@ -176,7 +173,7 @@ def migrate(
         steps.add(
             Command(
                 command=(
-                    f"docker compose exec backend python manage.py makemigrations --merge"
+                    f"docker compose exec server python manage.py makemigrations --merge"
                 )
             ),
         )
@@ -185,14 +182,14 @@ def migrate(
             (
                 Command(
                     command=(
-                        f"docker compose exec backend python manage.py makemigrations"
+                        f"docker compose exec server python manage.py makemigrations"
                     )
                 )
             ),
         )
     if run:
         steps.add(
-            Command(command=(f"docker compose exec backend python manage.py migrate")),
+            Command(command=(f"docker compose exec server python manage.py migrate")),
         )
     steps.run()
 
@@ -205,14 +202,14 @@ def factories(
     steps = Steps(
         steps=[
             Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
+                command=(f"docker compose exec server python manage.py run_factories")
             ),
         ],
     )
     if emails:
         steps.add(
             Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
+                command=(f"docker compose exec server python manage.py seed_emails")
             ),
         )
     steps.run()
@@ -266,12 +263,12 @@ def install(
             [
                 Command(
                     command=(
-                        f"docker exec backend pip install {'--upgrade' if upgrade else ''} {package}"
+                        f"docker exec server pip install {'--upgrade' if upgrade else ''} {package}"
                     )
                 ),
                 Command(
                     command=(
-                        f"docker exec backend pip freeze | grep {package} >> requirements.txt"
+                        f"docker exec server pip freeze | grep {package} >> requirements.txt"
                     ),
                     shell=True,
                 ),
@@ -282,7 +279,7 @@ def install(
         steps.add(
             Command(
                 command=(
-                    f"docker exec frontend yarn {'up' if upgrade else 'add'} {package}"
+                    f"docker exec server yarn {'up' if upgrade else 'add'} {package}"
                 )
             )
         )
@@ -304,13 +301,13 @@ def install(
 
     steps.run()
 
+
 @app.command(help="Remote into a container")
-def shell(environment: Optional[str] = typer.Argument(default="backend", help="Container to remote into")):
+def shell():
     steps = Steps()
-    steps.add(
-        Command(command=f"docker compose exec {environment} bash")
-    )
+    steps.add(Command(command=f"docker compose exec server bash"))
     steps.run()
+
 
 @app.callback()
 def main(version: bool = False):
