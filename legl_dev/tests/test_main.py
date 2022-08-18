@@ -163,21 +163,7 @@ def test_install_self_upgrade(run):
 
 @mock.patch("legl_dev.command.run")
 def test_remote_server_commands(run):
-    main.shell("server")
-    calls = [
-        mock.call(
-            ["docker", "compose", "exec", "server", "bash"],
-            universal_newlines=True,
-            shell=False,
-            check=True,
-        ),
-    ]
-    run.assert_has_calls(calls)
-
-
-@mock.patch("legl_dev.command.run")
-def test_remote_server_commands(run):
-    main.shell("server")
+    main.shell()
     calls = [
         mock.call(
             ["docker", "compose", "exec", "server", "bash"],
