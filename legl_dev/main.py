@@ -43,8 +43,9 @@ def build(
             Command(command=f"{docker_cmd} up -d"),
             Command(command=f"{django_cmd} migrate"),
             Command(command=f"{docker_cmd} stop database"),
-            Command(command=f"{docker_cmd} rm database"),
+            Command(command=f"{docker_cmd} rm -f database"),
             Command(command=f"{docker_cmd} up database -d"),
+            Command(command=f"{django_cmd} migrate"),
             Command(command=f"{django_cmd} run_factories"),
             Command(command=f"{django_cmd} seed_emails"),
             Command(command=f"{docker_cmd} stop"),
@@ -247,7 +248,7 @@ def install(
             [
                 Command(
                     command=(
-                        f"{exec_cmd}pip install {'--upgrade' if upgrade else ''} {package}"
+                        f"{exec_cmd} pip install {'--upgrade' if upgrade else ''} {package}"
                     )
                 ),
                 Command(

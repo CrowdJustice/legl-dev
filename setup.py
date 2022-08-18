@@ -7,7 +7,7 @@ packages = ["legl_dev"]
 
 package_data = {"": ["*"]}
 
-install_requires = ["black", "isort==5.9.3", "typer>=0.4.0"]
+install_requires = ["black", "isort==5.9.3", "typer==0.6.1"]
 
 entry_points = {"console_scripts": ["legl-dev = legl_dev.main:app"]}
 
