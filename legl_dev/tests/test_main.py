@@ -29,7 +29,7 @@ def test_install_pip(run):
     )
     calls = [
         mock.call(
-            ["docker", "exec", "server", "pip", "install", "example"],
+            ["docker", "compose", "exec", "server", "pip", "install", "example"],
             universal_newlines=True,
             shell=False,
             check=True,
@@ -56,7 +56,16 @@ def test_install_pip_upgrade(run):
     )
     calls = [
         mock.call(
-            ["docker", "exec", "server", "pip", "install", "--upgrade", "example"],
+            [
+                "docker",
+                "compose",
+                "exec",
+                "server",
+                "pip",
+                "install",
+                "--upgrade",
+                "example",
+            ],
             universal_newlines=True,
             shell=False,
             check=True,
@@ -83,7 +92,7 @@ def test_install_yarn(run):
     )
     calls = [
         mock.call(
-            ["docker", "exec", "server", "yarn", "add", "example"],
+            ["docker", "compose", "exec", "server", "yarn", "add", "example"],
             universal_newlines=True,
             shell=False,
             check=True,
@@ -104,7 +113,7 @@ def test_install_yarn_upgrade(run):
     )
     calls = [
         mock.call(
-            ["docker", "exec", "server", "yarn", "up", "example"],
+            ["docker", "compose", "exec", "server", "yarn", "up", "example"],
             universal_newlines=True,
             shell=False,
             check=True,
