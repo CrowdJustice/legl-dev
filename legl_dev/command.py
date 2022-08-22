@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-import typer
-from subprocess import run, CalledProcessError
+import pathlib
+import shutil
+import subprocess
 from typing import Union
+
+import typer
 
 
 class Command:
@@ -13,17 +16,41 @@ class Command:
         self.command = command
         self.shell = shell
 
-    def run(self) -> None:
+    def _line_message(self, message):
+        width, _ = shutil.get_terminal_size()
+        line = "".join(["-" for _ in range((width - len(message) - 4) // 2)])
+        return f"{line} {message} {line}"
+
+    def _success_output(self):
+        typer.secho(
+            self._line_message(" ✅  Command successful! ✅ "),
+            fg=typer.colors.GREEN,
+        )
+
+    def _error_output(self, e):
+        typer.secho(
+            f"💥 Command exited with code {e.returncode}! Check the logs above for more informations. 💥",
+            fg=typer.colors.BRIGHT_RED,
+        )
+
+    def _command_output(self):
+        typer.secho(
+            self._line_message(f"🚧 Running: {self.command} 🚧"),
+            fg=typer.colors.YELLOW,
+        )
+
+    def run(self):
+        self._command_output()
         try:
-            run(
+            subprocess.run(
                 self.command if self.shell else self.command.split(),
                 universal_newlines=True,
                 shell=self.shell,
                 check=True,
             )
-            typer.secho(f"✅  Command successful!", fg=typer.colors.GREEN)
-        except CalledProcessError as e:
-            typer.secho(f"⚠️  Command exited with code {e.returncode}!", fg=typer.colors.YELLOW)
+            self._success_output()
+        except subprocess.CalledProcessError as e:
+            self._error_output(e)
 
 
 class Steps:
@@ -36,6 +63,6 @@ class Steps:
         except TypeError:
             self.steps += [steps]
 
-    def run(self) -> None:
+    def run(self, verbose=False) -> None:
         for step in self.steps:
             step.run()

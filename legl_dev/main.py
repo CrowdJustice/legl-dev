@@ -1,24 +1,38 @@
 #!/usr/bin/env python3
+import json
 import os
 from typing import Optional
 
 import pkg_resources
+import requests
 import typer
-
 from legl_dev.command import Command, Steps
 
 app = typer.Typer(invoke_without_command=True)
-
+docker_cmd = "docker compose"
+exec_cmd = f"{docker_cmd} exec server"
+django_cmd = f"{exec_cmd} python manage.py"
 os.environ["COMPOSE_DOCKER_CLI_BUILD"] = "1"
 os.environ["DOCKER_BUILDKIT"] = "1"
 
 
 @app.command(help="Start the dev environment")
-def start():
+def start(verbose: bool = typer.Option(True, help="Run in verbose mode")):
     steps = Steps()
     steps.add(
         Command(
-            command="docker compose up",
+            command=f"{docker_cmd} up {'' if verbose else '-d'}",
+        )
+    )
+    steps.run()
+
+
+@app.command(help="Start the dev environment")
+def logs():
+    steps = Steps()
+    steps.add(
+        Command(
+            command=f"{docker_cmd} logs -f",
         )
     )
     steps.run()
@@ -29,30 +43,25 @@ def build(
     cache: bool = typer.Option(True, help="Drop the database and create a fresh one"),
 ) -> None:
 
-    extra_args = f"{'' if cache else '--no-cache'} "
+    extra_args = f"{'' if cache else '--no-cache'}"
     steps = Steps(
         steps=[
             Command(
-                command=f"docker compose build {extra_args}",
+                command=f"{docker_cmd} build {extra_args}",
             ),
         ],
     )
     steps.add(
         [
-            Command(command=f"docker compose up -d"),
-            Command(command=(f"docker compose exec backend python manage.py migrate")),
-            Command(
-                command=(
-                    f"docker compose exec backend python manage.py flush --noinput"
-                )
-            ),
-            Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
-            ),
-            Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
-            ),
-            Command(command=f"docker compose stop"),
+            Command(command=f"{docker_cmd} up -d"),
+            Command(command=f"{django_cmd} migrate"),
+            Command(command=f"{docker_cmd} stop database"),
+            Command(command=f"{docker_cmd} rm -f database"),
+            Command(command=f"{docker_cmd} up database -d"),
+            Command(command=f"{django_cmd} migrate"),
+            Command(command=f"{django_cmd} run_factories"),
+            Command(command=f"{django_cmd} seed_emails"),
+            Command(command=f"{docker_cmd} stop"),
         ]
     )
     steps.run()
@@ -112,7 +121,7 @@ def pytest(
         steps=[
             Command(
                 command=(
-                    f"docker compose "
+                    f"{docker_cmd} "
                     "run --rm backend pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} /code/{path}"
@@ -130,9 +139,9 @@ def format(
 
     steps = Steps(
         steps=[
-            Command(command=(f"isort . --profile black")),
-            Command(command=(f"black .")),
-            Command(command=("yarn format:prettier")),
+            Command(command=f"isort . --profile black"),
+            Command(command=f"black ."),
+            Command(command="yarn format:prettier"),
         ]
     )
     if push:
@@ -174,25 +183,15 @@ def migrate(
     steps = Steps()
     if merge:
         steps.add(
-            Command(
-                command=(
-                    f"docker compose exec backend python manage.py makemigrations --merge"
-                )
-            ),
+            Command(command=f"{django_cmd} makemigrations --merge"),
         )
     if make:
         steps.add(
-            (
-                Command(
-                    command=(
-                        f"docker compose exec backend python manage.py makemigrations"
-                    )
-                )
-            ),
+            (Command(command=f"{django_cmd} makemigrations")),
         )
     if run:
         steps.add(
-            Command(command=(f"docker compose exec backend python manage.py migrate")),
+            Command(command=f"{django_cmd} migrate"),
         )
     steps.run()
 
@@ -204,16 +203,12 @@ def factories(
 
     steps = Steps(
         steps=[
-            Command(
-                command=(f"docker compose exec backend python manage.py run_factories")
-            ),
+            Command(command=f"{django_cmd} run_factories"),
         ],
     )
     if emails:
         steps.add(
-            Command(
-                command=(f"docker compose exec backend python manage.py seed_emails")
-            ),
+            Command(command=f"{django_cmd} seed_emails"),
         )
     steps.run()
 
@@ -266,12 +261,12 @@ def install(
             [
                 Command(
                     command=(
-                        f"docker exec backend pip install {'--upgrade' if upgrade else ''} {package}"
+                        f"{exec_cmd} pip install {'--upgrade' if upgrade else ''} {package}"
                     )
                 ),
                 Command(
                     command=(
-                        f"docker exec backend pip freeze | grep {package} >> requirements.txt"
+                        f"{exec_cmd} pip freeze | grep {package} >> requirements.txt"
                     ),
                     shell=True,
                 ),
@@ -280,11 +275,7 @@ def install(
 
     if yarn:
         steps.add(
-            Command(
-                command=(
-                    f"docker exec frontend yarn {'up' if upgrade else 'add'} {package}"
-                )
-            )
+            Command(command=(f"{exec_cmd} yarn {'up' if upgrade else 'add'} {package}"))
         )
 
     if self:
@@ -304,18 +295,36 @@ def install(
 
     steps.run()
 
+
 @app.command(help="Remote into a container")
-def shell(environment: Optional[str] = typer.Argument(default="backend", help="Container to remote into")):
+def shell():
     steps = Steps()
-    steps.add(
-        Command(command=f"docker compose exec {environment} bash")
-    )
+    steps.add(Command(command=f"{exec_cmd} bash"))
     steps.run()
+
 
 @app.callback()
 def main(version: bool = False):
+    response = requests.get(
+        url="https://api.github.com/repos/crowdjustice/legl-dev/releases",
+        headers={"Accept": "application/vnd.github.v3+json"},
+    )
+    releases = response.json()
+    latest_vesrion = pkg_resources.parse_version(releases[0]["tag_name"])
+    current_version = pkg_resources.parse_version(
+        pkg_resources.require("legl_dev")[0].version
+    )
+
+    if latest_vesrion > current_version:
+        update = typer.confirm(
+            f"A newer version ({latest_vesrion}) of legl-dev is availible, would you like to update?"
+        )
+        if update:
+            command = Command(command=f"pip install --upgrade legl-dev")
+            command.run()
+
     if version:
-        typer.echo(f"v{pkg_resources.require('legl_dev')[0].version}")
+        typer.echo(f"v{current_version}")
         raise typer.Exit()
 
 
