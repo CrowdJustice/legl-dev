@@ -122,7 +122,7 @@ def pytest(
             Command(
                 command=(
                     f"{docker_cmd} "
-                    "run --rm backend pytest "
+                    "run --rm server pytest "
                     "--html=unit_test_results.html "
                     f"{extra_args} /code/{path}"
                 )
